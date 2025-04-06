@@ -1,0 +1,6 @@
+git add index.js = tek bir dosyayı + layıp 
+git commit -m "update index.js"
+git push = pushlar git içerisine 
+gid add . = bütün değişiklikleri kovaya ekleme
+git commit -m "create components and pages"
+bütün dosyaları yeniler

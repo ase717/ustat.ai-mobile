@@ -122,11 +122,13 @@ const styles = StyleSheet.create({
   logo: {
     width: 110,
     height: 110,
+    marginRight: 2,
   },
   logoText: {
     fontSize: 35,
     fontWeight: '700',
     color: 'white',
+    marginLeft: 2,
   }
 });
 

@@ -5,7 +5,9 @@ import {
   TouchableOpacity, 
   Image, 
   StatusBar,
-  ScrollView
+  ScrollView,
+  KeyboardAvoidingView,
+  Platform
 } from 'react-native';
 import { Text, TextInput, Button, Checkbox, Snackbar } from 'react-native-paper';
 import { useDispatch } from 'react-redux';
@@ -183,37 +185,77 @@ const RegisterScreen = ({ navigation }) => {
         size={150}
       />
       
-      <ScrollView 
-        contentContainerStyle={styles.scrollContent}
-        showsVerticalScrollIndicator={false}
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        style={{ flex: 1 }}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 64 : 0}
       >
-        {/* Header with logo */}
-        <View style={styles.headerContainer}>
-          <Image 
-            source={require('../../../assets/images/logo.png')} 
-            style={styles.logo} 
-            resizeMode="contain"
-          />
-          <Text style={styles.title}>Üstat</Text>
-          <Text style={styles.registerTitle}>Kayıt Ol</Text>
-          <Text style={styles.subtitle}>
-            Bugün yeni bir gün. Senin günün. Onu sen şekillendir.
-            {'\n'}Yapay Zeka destekli hukuka erişmek için kayıt ol.
-          </Text>
-        </View>
-        
-        {/* Register form */}
-        <Animated.View style={[styles.formContainer, formAnimatedStyle]}>
-          <View style={styles.nameRow}>
-            <View style={styles.nameField}>
-              <Text style={styles.fieldLabel}>Ad</Text>
+        <ScrollView 
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
+        >
+          {/* Header with logo */}
+          <View style={styles.headerContainer}>
+            <Image 
+              source={require('../../../assets/images/logo.png')} 
+              style={styles.logo} 
+              resizeMode="contain"
+            />
+            <Text style={styles.title}>Üstat</Text>
+            <Text style={styles.registerTitle}>Kayıt Ol</Text>
+            <Text style={styles.subtitle}>
+              Bugün yeni bir gün. Senin günün. Onu sen şekillendir.
+              {'\n'}Yapay Zeka destekli hukuka erişmek için kayıt ol.
+            </Text>
+          </View>
+          
+          {/* Register form */}
+          <Animated.View style={[styles.formContainer, formAnimatedStyle]}>
+            <View style={styles.nameRow}>
+              <View style={styles.nameField}>
+                <Text style={styles.fieldLabel}>Ad</Text>
+                <TextInput
+                  value={firstName}
+                  onChangeText={setFirstName}
+                  style={styles.input}
+                  placeholder="Adınız"
+                  placeholderTextColor="rgba(255, 255, 255, 0.6)"
+                  autoCapitalize="words"
+                  mode="flat"
+                  underlineColor="transparent"
+                  textColor="white"
+                  theme={{ colors: { onSurfaceVariant: 'white' } }}
+                />
+              </View>
+              
+              <View style={styles.nameField}>
+                <Text style={styles.fieldLabel}>Soyad</Text>
+                <TextInput
+                  value={lastName}
+                  onChangeText={setLastName}
+                  style={styles.input}
+                  placeholder="Soyadınız"
+                  placeholderTextColor="rgba(255, 255, 255, 0.6)"
+                  autoCapitalize="words"
+                  mode="flat"
+                  underlineColor="transparent"
+                  textColor="white"
+                  theme={{ colors: { onSurfaceVariant: 'white' } }}
+                />
+              </View>
+            </View>
+            
+            <View style={styles.fieldContainer}>
+              <Text style={styles.fieldLabel}>E-posta</Text>
               <TextInput
-                value={firstName}
-                onChangeText={setFirstName}
+                value={email}
+                onChangeText={setEmail}
                 style={styles.input}
-                placeholder="Adınız"
+                placeholder="ornek@eposta.com"
                 placeholderTextColor="rgba(255, 255, 255, 0.6)"
-                autoCapitalize="words"
+                keyboardType="email-address"
+                autoCapitalize="none"
                 mode="flat"
                 underlineColor="transparent"
                 textColor="white"
@@ -221,122 +263,89 @@ const RegisterScreen = ({ navigation }) => {
               />
             </View>
             
-            <View style={styles.nameField}>
-              <Text style={styles.fieldLabel}>Soyad</Text>
+            <View style={styles.fieldContainer}>
+              <Text style={styles.fieldLabel}>Telefon</Text>
               <TextInput
-                value={lastName}
-                onChangeText={setLastName}
+                value={phone}
+                onChangeText={setPhone}
                 style={styles.input}
-                placeholder="Soyadınız"
+                placeholder="+90 555 555 55 55"
                 placeholderTextColor="rgba(255, 255, 255, 0.6)"
-                autoCapitalize="words"
+                keyboardType="phone-pad"
                 mode="flat"
                 underlineColor="transparent"
                 textColor="white"
                 theme={{ colors: { onSurfaceVariant: 'white' } }}
               />
             </View>
-          </View>
-          
-          <View style={styles.fieldContainer}>
-            <Text style={styles.fieldLabel}>E-posta</Text>
-            <TextInput
-              value={email}
-              onChangeText={setEmail}
-              style={styles.input}
-              placeholder="ornek@eposta.com"
-              placeholderTextColor="rgba(255, 255, 255, 0.6)"
-              keyboardType="email-address"
-              autoCapitalize="none"
-              mode="flat"
-              underlineColor="transparent"
-              textColor="white"
-              theme={{ colors: { onSurfaceVariant: 'white' } }}
-            />
-          </View>
-          
-          <View style={styles.fieldContainer}>
-            <Text style={styles.fieldLabel}>Telefon</Text>
-            <TextInput
-              value={phone}
-              onChangeText={setPhone}
-              style={styles.input}
-              placeholder="+90 555 555 55 55"
-              placeholderTextColor="rgba(255, 255, 255, 0.6)"
-              keyboardType="phone-pad"
-              mode="flat"
-              underlineColor="transparent"
-              textColor="white"
-              theme={{ colors: { onSurfaceVariant: 'white' } }}
-            />
-          </View>
-          
-          <View style={styles.fieldContainer}>
-            <Text style={styles.fieldLabel}>Parola</Text>
-            <TextInput
-              value={password}
-              onChangeText={setPassword}
-              secureTextEntry={true}
-              style={styles.input}
-              placeholder="En az 8 karakter"
-              placeholderTextColor="rgba(255, 255, 255, 0.6)"
-              mode="flat"
-              underlineColor="transparent"
-              textColor="white"
-              theme={{ colors: { onSurfaceVariant: 'white' } }}
-            />
-          </View>
-          
-          <View style={styles.fieldContainer}>
-            <Text style={styles.fieldLabel}>Parola Tekrar</Text>
-            <TextInput
-              value={confirmPassword}
-              onChangeText={setConfirmPassword}
-              secureTextEntry={true}
-              style={styles.input}
-              placeholder="Parolanızı tekrar girin"
-              placeholderTextColor="rgba(255, 255, 255, 0.6)"
-              mode="flat"
-              underlineColor="transparent"
-              textColor="white"
-              theme={{ colors: { onSurfaceVariant: 'white' } }}
-            />
-          </View>
-          
-          <View style={styles.checkboxContainer}>
-            <Checkbox
-              status={agreeTerms ? 'checked' : 'unchecked'}
-              onPress={() => setAgreeTerms(!agreeTerms)}
-              color="#6C4EE0"
-              uncheckedColor="rgba(255, 255, 255, 0.5)"
-            />
-            <View style={styles.termsTextContainer}>
-              <Text style={styles.termsText}>
-                Üstat'ın <Text style={styles.linkText}>Kullanım Koşulları</Text>, <Text style={styles.linkText}>Gizlilik Politikası</Text> ve varsayılan <Text style={styles.linkText}>Bildirim Ayarları</Text>'nı kabul ediyorum.
-              </Text>
+            
+            <View style={styles.fieldContainer}>
+              <Text style={styles.fieldLabel}>Parola</Text>
+              <TextInput
+                value={password}
+                onChangeText={setPassword}
+                secureTextEntry={true}
+                style={styles.input}
+                placeholder="En az 8 karakter"
+                placeholderTextColor="rgba(255, 255, 255, 0.6)"
+                mode="flat"
+                underlineColor="transparent"
+                textColor="white"
+                theme={{ colors: { onSurfaceVariant: 'white' } }}
+              />
             </View>
-          </View>
-          
-          <Button
-            mode="contained"
-            onPress={handleRegister}
-            style={styles.registerButton}
-            labelStyle={styles.buttonText}
-            loading={loading}
-            disabled={loading}
-            buttonColor="#333"
-          >
-            Hesap Oluştur
-          </Button>
-          
-          <View style={styles.loginContainer}>
-            <Text style={styles.loginText}>Zaten hesabınız var mı? </Text>
-            <TouchableOpacity onPress={() => navigation.navigate('Login')}>
-              <Text style={styles.loginLinkText}>Giriş yap</Text>
-            </TouchableOpacity>
-          </View>
-        </Animated.View>
-      </ScrollView>
+            
+            <View style={styles.fieldContainer}>
+              <Text style={styles.fieldLabel}>Parola Tekrar</Text>
+              <TextInput
+                value={confirmPassword}
+                onChangeText={setConfirmPassword}
+                secureTextEntry={true}
+                style={styles.input}
+                placeholder="Parolanızı tekrar girin"
+                placeholderTextColor="rgba(255, 255, 255, 0.6)"
+                mode="flat"
+                underlineColor="transparent"
+                textColor="white"
+                theme={{ colors: { onSurfaceVariant: 'white' } }}
+              />
+            </View>
+            
+            <View style={styles.checkboxContainer}>
+              <Checkbox
+                status={agreeTerms ? 'checked' : 'unchecked'}
+                onPress={() => setAgreeTerms(!agreeTerms)}
+                color="#6C4EE0"
+                uncheckedColor="rgba(255, 255, 255, 0.5)"
+              />
+              <View style={styles.termsTextContainer}>
+                <Text style={styles.termsText}>
+                  Üstat'ın <Text style={styles.linkText}>Kullanım Koşulları</Text>, <Text style={styles.linkText}>Gizlilik Politikası</Text> ve varsayılan <Text style={styles.linkText}>Bildirim Ayarları</Text>'nı kabul ediyorum.
+                </Text>
+              </View>
+            </View>
+            
+            <Button
+              mode="contained"
+              onPress={handleRegister}
+              style={styles.registerButton}
+              labelStyle={styles.buttonText}
+              loading={loading}
+              disabled={loading}
+              buttonColor="#333"
+            >
+              Hesap Oluştur
+            </Button>
+            
+            <View style={styles.loginContainer}>
+              <Text style={styles.loginText}>Zaten hesabınız var mı? </Text>
+              <TouchableOpacity onPress={() => navigation.navigate('Login')}>
+                <Text style={styles.loginLinkText}>Giriş yap</Text>
+              </TouchableOpacity>
+            </View>
+          </Animated.View>
+        </ScrollView>
+      </KeyboardAvoidingView>
       
       {/* Response message */}
       <Snackbar

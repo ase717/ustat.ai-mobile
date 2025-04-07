@@ -5,7 +5,9 @@ import {
   TouchableOpacity, 
   Image, 
   StatusBar,
-  ScrollView
+  ScrollView,
+  KeyboardAvoidingView,
+  Platform
 } from 'react-native';
 import { Text, TextInput, Button, Snackbar } from 'react-native-paper';
 import { useDispatch } from 'react-redux';
@@ -160,20 +162,20 @@ const LoginScreen = ({ navigation, route }) => {
 
   return (
     <LinearGradient
-      colors={['#131313', '#1F1F1F']}
+      colors={['rgb(18, 12, 36)', 'rgb(30, 20, 60)']}
       style={styles.container}
     >
-      <StatusBar barStyle="light-content" backgroundColor="#131313" />
+      <StatusBar barStyle="light-content" backgroundColor="#12102a" />
       
       {/* Background gradient circles */}
       <GradientCircle 
-        style={{ position: 'absolute', top: 60, right: -60 }}
-        colors={['rgba(65, 41, 112, 0.67)', 'transparent']}
+        style={{ position: 'absolute', top: 80, left: -40 }}
+        colors={['rgba(106, 90, 205, 0.2)', 'transparent']}
         size={160}
       />
       <GradientCircle 
-        style={{ position: 'absolute', top: 350, left: -50 }}
-        colors={['rgba(15, 74, 235, 0.3)', 'transparent']}
+        style={{ position: 'absolute', top: 350, right: -60 }}
+        colors={['rgba(106, 90, 205, 0.2)', 'transparent']}
         size={150}
       />
       
@@ -185,91 +187,101 @@ const LoginScreen = ({ navigation, route }) => {
         <Ionicons name="arrow-back" size={24} color="white" />
       </TouchableOpacity>
       
-      <ScrollView 
-        contentContainerStyle={styles.scrollContent}
-        showsVerticalScrollIndicator={false}
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        style={{ flex: 1 }}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 64 : 0}
       >
-        {/* Header with logo */}
-        <View style={styles.headerContainer}>
-          <Image 
-            source={require('../../../assets/images/logo.png')} 
-            style={styles.logo} 
-            resizeMode="contain"
-          />
-          <Text style={styles.headerText}>Üstat</Text>
-          
-        </View>
-        <View style={styles.titleContainer}>
-          <Text style={styles.title}>Giriş Yap</Text>
-          <Text style={styles.subtitle}>Bugün yeni bir gün. Senin günün. Onu sen şekillendir. Projelerini yönetmeye başlamak için giriş yap.</Text>
-        </View>
-        
-        {/* Login form */}
-        <Animated.View style={[styles.formContainer, formAnimatedStyle]}>
-          <TextInput
-            label="E-Posta"
-            value={email}
-            onChangeText={setEmail}
-            style={styles.input}
-            keyboardType="email-address"
-            autoCapitalize="none"
-            mode="outlined"
-            outlineColor="rgba(255, 255, 255, 0.2)"
-            activeOutlineColor={colors.primary.main}
-            textColor="white"
-            theme={{ colors: { onSurfaceVariant: 'rgba(255, 255, 255, 0.7)' } }}
-          />
-          
-          <View style={styles.fieldContainer}>
-            <Text style={styles.fieldLabel}>Parola</Text>
-            <TextInput
-              value={password}
-              onChangeText={setPassword}
-              secureTextEntry={!showPassword}
-              right={
-                <TextInput.Icon
-                  icon={showPassword ? "eye-off" : "eye"}
-                  onPress={() => setShowPassword(!showPassword)}
-                  color="rgba(255, 255, 255, 0.7)"
-                />
-              }
-              style={styles.input}
-              placeholder="Parolanızı girin"
-              placeholderTextColor="rgba(255, 255, 255, 0.6)"
-              mode="flat"
-              underlineColor="transparent"
-              textColor="white"
-              theme={{ colors: { onSurfaceVariant: 'white' } }}
+        <ScrollView 
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
+        >
+          {/* Header with logo */}
+          <View style={styles.headerContainer}>
+            <Image 
+              source={require('../../../assets/images/logo.png')} 
+              style={styles.logo} 
+              resizeMode="contain"
             />
+            <Text style={styles.title}>Üstat</Text>
+            <Text style={styles.registerTitle}>Giriş Yap</Text>
+            <Text style={styles.subtitle}>
+              Bugün yeni bir gün. Senin günün. Onu sen şekillendir.
+              {'\n'}Projelerini yönetmeye başlamak için giriş yap.
+            </Text>
           </View>
           
-          <TouchableOpacity
-            style={styles.forgotPasswordLink}
-            onPress={() => navigation.navigate('ForgotPassword')}
-          >
-            <Text style={styles.forgotPasswordText}>Şifremi Unuttum</Text>
-          </TouchableOpacity>
-          
-          <Button
-            mode="contained"
-            onPress={handleLogin}
-            style={styles.loginButton}
-            labelStyle={styles.buttonText}
-            loading={loading}
-            disabled={loading}
-            buttonColor="#333"
-          >
-            Giriş Yap
-          </Button>
-          
-          <View style={styles.registerContainer}>
-            <Text style={styles.registerText}>Hesabınız yok mu? </Text>
-            <TouchableOpacity onPress={() => navigation.navigate('Register')}>
-              <Text style={styles.registerLinkText}>Kayıt ol</Text>
+          {/* Login form */}
+          <Animated.View style={[styles.formContainer, formAnimatedStyle]}>
+            <View style={styles.fieldContainer}>
+              <Text style={styles.fieldLabel}>E-posta</Text>
+              <TextInput
+                value={email}
+                onChangeText={setEmail}
+                style={styles.input}
+                placeholder="ornek@eposta.com"
+                placeholderTextColor="rgba(255, 255, 255, 0.6)"
+                keyboardType="email-address"
+                autoCapitalize="none"
+                mode="flat"
+                underlineColor="transparent"
+                textColor="white"
+                theme={{ colors: { onSurfaceVariant: 'white' } }}
+              />
+            </View>
+            
+            <View style={styles.fieldContainer}>
+              <Text style={styles.fieldLabel}>Parola</Text>
+              <TextInput
+                value={password}
+                onChangeText={setPassword}
+                secureTextEntry={!showPassword}
+                right={
+                  <TextInput.Icon
+                    icon={showPassword ? "eye-off" : "eye"}
+                    onPress={() => setShowPassword(!showPassword)}
+                    color="rgba(255, 255, 255, 0.7)"
+                  />
+                }
+                style={styles.input}
+                placeholder="Parolanızı girin"
+                placeholderTextColor="rgba(255, 255, 255, 0.6)"
+                mode="flat"
+                underlineColor="transparent"
+                textColor="white"
+                theme={{ colors: { onSurfaceVariant: 'white' } }}
+              />
+            </View>
+            
+            <TouchableOpacity
+              style={styles.forgotPasswordLink}
+              onPress={() => navigation.navigate('ForgotPassword')}
+            >
+              <Text style={styles.forgotPasswordText}>Şifremi Unuttum</Text>
             </TouchableOpacity>
-          </View>
-        </Animated.View>
-      </ScrollView>
+            
+            <Button
+              mode="contained"
+              onPress={handleLogin}
+              style={styles.loginButton}
+              labelStyle={styles.buttonText}
+              loading={loading}
+              disabled={loading}
+              buttonColor="#6C4EE0"
+            >
+              Giriş Yap
+            </Button>
+            
+            <View style={styles.registerContainer}>
+              <Text style={styles.registerText}>Hesabınız yok mu? </Text>
+              <TouchableOpacity onPress={() => navigation.navigate('Register')}>
+                <Text style={styles.registerLinkText}>Kayıt ol</Text>
+              </TouchableOpacity>
+            </View>
+          </Animated.View>
+        </ScrollView>
+      </KeyboardAvoidingView>
       
       {/* Response message */}
       <Snackbar
@@ -319,22 +331,18 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 30,
   },
-  titleContainer: {
-    alignItems: 'center',
-    marginBottom: 20,
-  },
   logo: {
     width: 70,
     height: 70,
     marginBottom: 1,
   },
-  headerText: {
-    fontSize: 23,
+  title: {
+    fontSize: 25,
     fontWeight: 'bold',
     color: 'white',
     marginBottom: 10,
   },
-  title: {
+  registerTitle: {
     fontSize: 25,
     fontWeight: 'bold',
     color: 'white',

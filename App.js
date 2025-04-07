@@ -19,13 +19,13 @@ const Stack = createStackNavigator();
 
 export default function App() {
   const [appIsReady, setAppIsReady] = useState(false);
-  const [appState, setAppState] = useState('splash'); // 'splash', 'onboarding', 'auth', 'main'
+  const [initialScreen, setInitialScreen] = useState('Splash');
   const [hasSeenOnboarding, setHasSeenOnboarding] = useState(false);
 
   useEffect(() => {
     async function prepare() {
       try {
-        // Clear onboarding flag for testing (comment this out in production)
+        // For testing - reset onboarding status
         await AsyncStorage.removeItem('hasSeenOnboarding');
         
         // Check if user has seen onboarding
@@ -51,50 +51,41 @@ export default function App() {
     prepare();
   }, []);
 
-  const handleSplashFinish = () => {
-    // If user has already seen onboarding, go to auth
-    // Otherwise, go to onboarding
-    if (hasSeenOnboarding) {
-      setAppState('auth');
-    } else {
-      setAppState('onboarding');
-    }
-  };
-  
-  const handleOnboardingFinish = async (destination = 'auth', targetScreen = null) => {
-    // Mark that user has seen onboarding
-    try {
-      await AsyncStorage.setItem('hasSeenOnboarding', 'true');
-    } catch (e) {
-      console.warn('Failed to save onboarding status', e);
-    }
-    
-    setAppState(destination);
-    
-    // Store the target screen for AuthNavigator to use
-    if (targetScreen) {
-      try {
-        await AsyncStorage.setItem('authTargetScreen', targetScreen);
-      } catch (e) {
-        console.warn('Failed to save target screen', e);
-      }
-    }
-  };
-
+  // Here we're using a separate component to render screens outside the Redux Provider
   if (!appIsReady) {
     return null;
   }
 
-  // Render based on app state
-  if (appState === 'splash') {
-    return <SplashScreen onFinish={handleSplashFinish} />;
-  }
-  
-  if (appState === 'onboarding') {
-    return <OnboardingScreen onFinish={handleOnboardingFinish} />;
+  // We can't use Redux for splash and onboarding screens, so we'll handle them separately
+  if (initialScreen === 'Splash') {
+    return (
+      <SplashScreen 
+        onFinish={() => {
+          setInitialScreen(hasSeenOnboarding ? 'Main' : 'Onboarding');
+        }} 
+      />
+    );
   }
 
-  // For both 'auth' and 'main' states, we use the navigation system
+  if (initialScreen === 'Onboarding') {
+    return (
+      <OnboardingScreen 
+        onFinish={(targetScreen) => {
+          // Save that user has seen onboarding
+          AsyncStorage.setItem('hasSeenOnboarding', 'true');
+          
+          // Save target screen if provided
+          if (targetScreen) {
+            AsyncStorage.setItem('authTargetScreen', targetScreen);
+          }
+          
+          setInitialScreen('Main');
+        }} 
+      />
+    );
+  }
+
+  // Main app flow
   return (
     <Provider store={store}>
       <PersistGate loading={null} persistor={persistor}>
@@ -104,7 +95,7 @@ export default function App() {
             <NavigationContainer>
               <Stack.Navigator screenOptions={{ headerShown: false }}>
                 <Stack.Screen name="AuthFlow" component={AuthNavigator} />
-                <Stack.Screen name="MainApp" component={AppNavigator} />
+                <Stack.Screen name="Main" component={AppNavigator} />
               </Stack.Navigator>
             </NavigationContainer>
           </ApiProvider>

@@ -114,6 +114,7 @@ const styles = StyleSheet.create({
   },
   contentContainer: {
     alignItems: 'center',
+    flexDirection: 'row',
   },
   logoContainer: {
     marginBottom: 20,

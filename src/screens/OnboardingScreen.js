@@ -172,7 +172,7 @@ const OnboardingScreen = ({ onFinish }) => {
   
   // Skip all slides
   const skipOnboarding = () => {
-    onFinish('auth', 'Register');
+    onFinish('Register');  // Navigate specifically to Register screen
   };
   
   // Go to next slide
@@ -183,8 +183,8 @@ const OnboardingScreen = ({ onFinish }) => {
         animated: true,
       });
     } else {
-      // Last slide, finish onboarding and go directly to Register
-      onFinish('auth', 'Register');
+      // Last slide, finish onboarding
+      onFinish('Register');  // Navigate specifically to Register screen
     }
   };
   

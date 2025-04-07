@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   View, 
   StyleSheet, 
@@ -7,7 +7,7 @@ import {
   StatusBar,
   ScrollView
 } from 'react-native';
-import { Text, TextInput, Button } from 'react-native-paper';
+import { Text, TextInput, Button, Snackbar } from 'react-native-paper';
 import { useDispatch } from 'react-redux';
 import { loginStart, loginSuccess, loginFailure } from '../../redux/authSlice';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -18,6 +18,8 @@ import Animated, {
 } from 'react-native-reanimated';
 import { Ionicons } from '@expo/vector-icons';
 import colors from '../../theme/colors';
+import { authService } from '../../services/api';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // Gradient circle component
 const GradientCircle = ({ style, colors, size = 160 }) => (
@@ -29,19 +31,22 @@ const GradientCircle = ({ style, colors, size = 160 }) => (
   </View>
 );
 
-const LoginScreen = ({ navigation }) => {
+const LoginScreen = ({ navigation, route }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [responseMessage, setResponseMessage] = useState('');
+  const [responseVisible, setResponseVisible] = useState(false);
+  const [responseType, setResponseType] = useState('info'); // 'success', 'error', 'info'
   
   // Animation values
   const formOpacity = useSharedValue(0);
   const formTranslateY = useSharedValue(50);
   
   // Start animation when component mounts
-  React.useEffect(() => {
+  useEffect(() => {
     formOpacity.value = withTiming(1, { duration: 800 });
     formTranslateY.value = withTiming(0, { duration: 800 });
   }, []);
@@ -56,36 +61,100 @@ const LoginScreen = ({ navigation }) => {
   
   const dispatch = useDispatch();
 
+  useEffect(() => {
+    // Check if email was passed from registration
+    if (route.params?.email) {
+      setEmail(route.params.email);
+    }
+  }, [route.params]);
+
+  const showResponse = (message, type = 'info') => {
+    setResponseMessage(message);
+    setResponseType(type);
+    setResponseVisible(true);
+  };
+
+  const hideResponse = () => {
+    setResponseVisible(false);
+  };
+
   const handleLogin = async () => {
     // Form validation
     if (!email.trim() || !password.trim()) {
-      setError('Lütfen tüm alanları doldurun');
+      setError('Lütfen e-posta ve şifrenizi girin');
+      showResponse('Lütfen e-posta ve şifrenizi girin', 'error');
       return;
     }
 
+    // Prepare login data
+    const credentials = {
+      email,
+      password,
+    };
+
     try {
+      setError(null);
       setLoading(true);
       dispatch(loginStart());
       
-      // Mock login for demo purposes
-      setTimeout(() => {
-        // Simulate successful login
-        const mockUser = {
-          id: '1',
-          email,
-          name: 'Test User',
-        };
-        
-        const mockToken = 'mock-jwt-token';
-        
-        dispatch(loginSuccess({ user: mockUser, token: mockToken }));
-        setLoading(false);
-      }, 1500);
+      // Make the API call
+      const response = await authService.login(credentials);
       
-    } catch (error) {
-      dispatch(loginFailure(error.message));
-      setError(error.message);
+      // Handle success
+      console.log('Login successful:', response.data);
+      
+      const { user, accessToken, refreshToken } = response.data;
+      
+      // Save tokens
+      await AsyncStorage.setItem('accessToken', accessToken);
+      await AsyncStorage.setItem('refreshToken', refreshToken);
+      
+      // Update Redux
+      dispatch(loginSuccess({
+        user: user,
+        token: accessToken
+      }));
+      
       setLoading(false);
+      showResponse('Giriş başarılı!', 'success');
+      
+      // Navigate to main app
+      setTimeout(() => {
+        navigation.reset({
+          index: 0,
+          routes: [{ name: 'Main' }],
+        });
+      }, 1000);
+    } catch (error) {
+      setLoading(false);
+      
+      // Extract error message
+      let errorMessage = 'Giriş sırasında bir hata oluştu';
+      
+      if (error.response) {
+        // Server responded with error status
+        console.log('Error response:', error.response);
+        
+        // Different error handling based on status code
+        if (error.response.status === 400) {
+          errorMessage = 'Geçersiz bilgiler: ' + (error.response.data?.message || 'Giriş bilgilerinizi kontrol edin');
+        } else if (error.response.status === 401) {
+          errorMessage = 'E-posta adresi veya şifre hatalı';
+        } else if (error.response.status === 403) {
+          errorMessage = 'Hesabınız askıya alınmış';
+        } else if (error.response.status === 422) {
+          errorMessage = 'Doğrulama hatası: ' + (error.response.data?.message || 'Giriş bilgilerinizi kontrol edin');
+        } else if (error.response.status === 500) {
+          errorMessage = 'Sunucu hatası: Lütfen daha sonra tekrar deneyin';
+        }
+      } else if (error.request) {
+        // Request was made but no response
+        errorMessage = 'Sunucuya ulaşılamıyor. İnternet bağlantınızı kontrol edin';
+      }
+      
+      setError(errorMessage);
+      dispatch(loginFailure(errorMessage));
+      showResponse(errorMessage, 'error');
     }
   };
 
@@ -151,35 +220,34 @@ const LoginScreen = ({ navigation }) => {
             theme={{ colors: { onSurfaceVariant: 'rgba(255, 255, 255, 0.7)' } }}
           />
           
-          <TextInput
-            label="Şifre"
-            value={password}
-            onChangeText={setPassword}
-            secureTextEntry={!showPassword}
-            right={
-              <TextInput.Icon
-                icon={showPassword ? "eye-off" : "eye"}
-                onPress={() => setShowPassword(!showPassword)}
-                color="rgba(255, 255, 255, 0.7)"
-              />
-            }
-            style={styles.input}
-            mode="outlined"
-            outlineColor="rgba(255, 255, 255, 0.2)"
-            activeOutlineColor={colors.primary.main}
-            textColor="white"
-            theme={{ colors: { onSurfaceVariant: 'rgba(255, 255, 255, 0.7)' } }}
-          />
-          
-          {error && (
-            <Text style={styles.errorText}>{error}</Text>
-          )}
+          <View style={styles.fieldContainer}>
+            <Text style={styles.fieldLabel}>Parola</Text>
+            <TextInput
+              value={password}
+              onChangeText={setPassword}
+              secureTextEntry={!showPassword}
+              right={
+                <TextInput.Icon
+                  icon={showPassword ? "eye-off" : "eye"}
+                  onPress={() => setShowPassword(!showPassword)}
+                  color="rgba(255, 255, 255, 0.7)"
+                />
+              }
+              style={styles.input}
+              placeholder="Parolanızı girin"
+              placeholderTextColor="rgba(255, 255, 255, 0.6)"
+              mode="flat"
+              underlineColor="transparent"
+              textColor="white"
+              theme={{ colors: { onSurfaceVariant: 'white' } }}
+            />
+          </View>
           
           <TouchableOpacity
-            onPress={() => navigation.navigate('ForgotPassword')}
             style={styles.forgotPasswordLink}
+            onPress={() => navigation.navigate('ForgotPassword')}
           >
-            <Text style={styles.linkText}>Şifremi Unuttum</Text>
+            <Text style={styles.forgotPasswordText}>Şifremi Unuttum</Text>
           </TouchableOpacity>
           
           <Button
@@ -189,6 +257,7 @@ const LoginScreen = ({ navigation }) => {
             labelStyle={styles.buttonText}
             loading={loading}
             disabled={loading}
+            buttonColor="#333"
           >
             Giriş Yap
           </Button>
@@ -196,17 +265,25 @@ const LoginScreen = ({ navigation }) => {
           <View style={styles.registerContainer}>
             <Text style={styles.registerText}>Hesabınız yok mu? </Text>
             <TouchableOpacity onPress={() => navigation.navigate('Register')}>
-              <Text style={styles.linkText}>Kayıt Ol</Text>
+              <Text style={styles.registerLinkText}>Kayıt ol</Text>
             </TouchableOpacity>
           </View>
-          
-          <TouchableOpacity 
-            style={styles.skipButton}
-            onPress={() => navigation.navigate('Welcome')}
-          >
-          </TouchableOpacity>
         </Animated.View>
       </ScrollView>
+      
+      {/* Response message */}
+      <Snackbar
+        visible={responseVisible}
+        onDismiss={hideResponse}
+        duration={3000}
+        style={[
+          styles.snackbar,
+          responseType === 'success' && styles.successSnackbar,
+          responseType === 'error' && styles.errorSnackbar
+        ]}
+      >
+        {responseMessage}
+      </Snackbar>
     </LinearGradient>
   );
 };
@@ -267,20 +344,33 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: 'rgba(255, 255, 255, 0.7)',
     textAlign: 'center',
+    paddingHorizontal: 20,
   },
   formContainer: {
     width: '100%',
+    marginTop: 20,
+  },
+  fieldContainer: {
+    marginBottom: 20,
+  },
+  fieldLabel: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: 'white',
+    marginBottom: 4,
   },
   input: {
-    marginBottom: 16,
-    backgroundColor: 'transparent',
+    backgroundColor: 'rgba(255, 255, 255, 0.06)',
+    borderRadius: 6,
+    height: 55,
+    fontSize: 16,
   },
   forgotPasswordLink: {
     alignSelf: 'flex-end',
     marginBottom: 24,
   },
-  linkText: {
-    color: colors.primary.main,
+  forgotPasswordText: {
+    color: '#6C4EE0',
     fontWeight: 'bold',
   },
   loginButton: {
@@ -292,6 +382,7 @@ const styles = StyleSheet.create({
   buttonText: {
     fontSize: 16,
     fontWeight: '600',
+    color: 'white',
   },
   registerContainer: {
     flexDirection: 'row',
@@ -301,17 +392,20 @@ const styles = StyleSheet.create({
   registerText: {
     color: 'rgba(255, 255, 255, 0.7)',
   },
-  skipButton: {
-    alignItems: 'center',
-    paddingVertical: 10,
+  registerLinkText: {
+    color: '#6C4EE0',
+    fontWeight: 'bold',
   },
-  skipText: {
-    color: 'rgba(255, 255, 255, 0.5)',
-    fontSize: 14,
+  snackbar: {
+    marginBottom: 20,
+    marginHorizontal: 20,
+    borderRadius: 8,
   },
-  errorText: {
-    color: colors.error.main,
-    marginBottom: 16,
+  successSnackbar: {
+    backgroundColor: '#4CAF50',
+  },
+  errorSnackbar: {
+    backgroundColor: '#F44336',
   },
 });
 

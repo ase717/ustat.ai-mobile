@@ -7,9 +7,9 @@ import {
   StatusBar,
   ScrollView
 } from 'react-native';
-import { Text, TextInput, Button, Checkbox } from 'react-native-paper';
+import { Text, TextInput, Button, Checkbox, Snackbar } from 'react-native-paper';
 import { useDispatch } from 'react-redux';
-import { loginSuccess } from '../../redux/authSlice';
+import { loginStart, loginSuccess, loginFailure } from '../../redux/authSlice';
 import { LinearGradient } from 'expo-linear-gradient';
 import Animated, { 
   useSharedValue, 
@@ -18,6 +18,8 @@ import Animated, {
 } from 'react-native-reanimated';
 import { Ionicons } from '@expo/vector-icons';
 import colors from '../../theme/colors';
+import { authService } from '../../services/api';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // Gradient circle component
 const GradientCircle = ({ style, colors, size = 160 }) => (
@@ -39,6 +41,9 @@ const RegisterScreen = ({ navigation }) => {
   const [agreeTerms, setAgreeTerms] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [responseMessage, setResponseMessage] = useState('');
+  const [responseVisible, setResponseVisible] = useState(false);
+  const [responseType, setResponseType] = useState('info'); // 'success', 'error', 'info'
   
   // Animation values
   const formOpacity = useSharedValue(0);
@@ -60,51 +65,108 @@ const RegisterScreen = ({ navigation }) => {
   
   const dispatch = useDispatch();
 
+  const showResponse = (message, type = 'info') => {
+    setResponseMessage(message);
+    setResponseType(type);
+    setResponseVisible(true);
+  };
+
+  const hideResponse = () => {
+    setResponseVisible(false);
+  };
+
   const handleRegister = async () => {
     // Form validation
     if (!firstName.trim() || !lastName.trim() || !email.trim() || !phone.trim() || !password.trim() || !confirmPassword.trim()) {
       setError('Lütfen tüm alanları doldurun');
+      showResponse('Lütfen tüm alanları doldurun', 'error');
       return;
     }
 
     if (password !== confirmPassword) {
       setError('Şifreler eşleşmiyor');
+      showResponse('Şifreler eşleşmiyor', 'error');
       return;
     }
 
     if (!agreeTerms) {
       setError('Kullanım koşullarını kabul etmelisiniz');
+      showResponse('Kullanım koşullarını kabul etmelisiniz', 'error');
       return;
     }
 
+    // Prepare user data
+    const userData = {
+      firstName,
+      lastName,
+      email,
+      phoneNumber: phone,
+      password
+    };
+
     try {
+      setError(null);
       setLoading(true);
       
-      // Mock registration for demo purposes
+      // Register the user
+      const registerResponse = await authService.register(userData);
+      console.log('Registration successful:', registerResponse.data);
+      
+      // Registration successful
+      setLoading(false);
+      
+      // Display success message
+      showResponse('Kayıt başarılı! Giriş sayfasına yönlendiriliyor...', 'success');
+      
+      // Navigate to login screen with prefilled email
       setTimeout(() => {
-        // Simulate successful registration
-        const mockUser = {
-          id: '1',
-          name: `${firstName} ${lastName}`,
-          email,
-          phone,
-        };
-        
-        const mockToken = 'mock-jwt-token';
-        
-        dispatch(loginSuccess({ user: mockUser, token: mockToken }));
-        setLoading(false);
+        navigation.navigate('Login', { 
+          email: email
+        });
       }, 1500);
       
     } catch (error) {
-      setError(error.message);
       setLoading(false);
+      console.log('Registration error details:', {
+        message: error.message,
+        response: error.response?.data,
+        status: error.response?.status,
+        code: error.code
+      });
+      
+      // Enhanced error handling
+      let errorMessage = 'Kayıt sırasında bir hata oluştu';
+      
+      if (error.response) {
+        // Server responded with error
+        if (error.response.status === 400) {
+          errorMessage = 'Geçersiz bilgiler: ' + (error.response.data?.message || 'Girdiğiniz bilgileri kontrol edin');
+        } else if (error.response.status === 409) {
+          errorMessage = 'Bu e-posta adresi zaten kullanılıyor';
+        } else if (error.response.status === 422) {
+          errorMessage = 'Doğrulama hatası: ' + (error.response.data?.message || 'Girdiğiniz bilgileri kontrol edin');
+        } else if (error.response.status === 500) {
+          errorMessage = 'Sunucu hatası: Lütfen daha sonra tekrar deneyin';
+        } else {
+          errorMessage = `Sunucu hatası (${error.response.status}): ${error.response.data?.message || 'Bilinmeyen hata'}`;
+        }
+      } else if (error.code === 'ECONNABORTED') {
+        errorMessage = 'Bağlantı zaman aşımına uğradı. Lütfen internet bağlantınızı kontrol edin.';
+      } else if (error.code === 'ERR_NETWORK') {
+        errorMessage = 'Ağ hatası: Sunucuya bağlanılamadı. Lütfen internet bağlantınızı kontrol edin.';
+      } else {
+        errorMessage = 'Bağlantı hatası: ' + error.message;
+      }
+      
+      setError(errorMessage);
+      dispatch(loginFailure(errorMessage));
+      showResponse(errorMessage, 'error');
     }
   };
 
   return (
     <LinearGradient
-      colors={['rgb(11, 6, 24)', 'rgba(11, 8, 19, 0.97)']}
+      colors={['rgb(18, 12, 36)', 'rgb(30, 20, 60)']}
       style={styles.container}
     >
       <StatusBar barStyle="light-content" backgroundColor="#12102a" />
@@ -255,10 +317,6 @@ const RegisterScreen = ({ navigation }) => {
             </View>
           </View>
           
-          {error && (
-            <Text style={styles.errorText}>{error}</Text>
-          )}
-          
           <Button
             mode="contained"
             onPress={handleRegister}
@@ -279,6 +337,20 @@ const RegisterScreen = ({ navigation }) => {
           </View>
         </Animated.View>
       </ScrollView>
+      
+      {/* Response message */}
+      <Snackbar
+        visible={responseVisible}
+        onDismiss={hideResponse}
+        duration={3000}
+        style={[
+          styles.snackbar,
+          responseType === 'success' && styles.successSnackbar,
+          responseType === 'error' && styles.errorSnackbar
+        ]}
+      >
+        {responseMessage}
+      </Snackbar>
     </LinearGradient>
   );
 };
@@ -336,7 +408,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     width: '100%',
-    marginBottom: 10,
   },
   nameField: {
     width: '48%',
@@ -402,6 +473,17 @@ const styles = StyleSheet.create({
   errorText: {
     color: '#ff6b6b',
     marginBottom: 16,
+  },
+  snackbar: {
+    marginBottom: 20,
+    marginHorizontal: 20,
+    borderRadius: 8,
+  },
+  successSnackbar: {
+    backgroundColor: '#4CAF50',
+  },
+  errorSnackbar: {
+    backgroundColor: '#F44336',
   },
 });
 

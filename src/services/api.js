@@ -1,65 +1,89 @@
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-// Create Axios instance
+// Create Axios instance with the correct development API URL
 const api = axios.create({
-  baseURL: 'https://api.ustatai.com', // Replace with your actual API URL
+  baseURL: 'https://dev.api.ustat.ai', // Use the development API URL
   headers: {
     'Content-Type': 'application/json',
   },
+  timeout: 10000, // 10 second timeout
 });
 
-// Request interceptor to add auth token
+// Add detailed logging for debugging
 api.interceptors.request.use(
   async (config) => {
+    console.log('API Request:', {
+      url: config.url,
+      method: config.method,
+      baseURL: config.baseURL,
+      headers: config.headers,
+      data: config.data,
+    });
+    
     try {
-      const token = await AsyncStorage.getItem('token');
+      const token = await AsyncStorage.getItem('accessToken');
       if (token) {
         config.headers.Authorization = `Bearer ${token}`;
       }
       return config;
     } catch (error) {
+      console.log('Request interceptor error:', error);
       return Promise.reject(error);
     }
   },
   (error) => {
+    console.log('Request error interceptor:', error);
     return Promise.reject(error);
   }
 );
 
-// Response interceptor to handle errors and token refresh
+// Enhanced response interceptor with logging
 api.interceptors.response.use(
   (response) => {
+    console.log('API Response success:', {
+      url: response.config.url,
+      status: response.status,
+      data: response.data,
+    });
     return response;
   },
   async (error) => {
+    console.log('API Response error:', {
+      url: error.config?.url,
+      message: error.message,
+      code: error.code,
+      status: error.response?.status,
+      data: error.response?.data,
+    });
+    
     const originalRequest = error.config;
 
     // If error is 401 and we haven't already tried to refresh the token
-    if (error.response.status === 401 && !originalRequest._retry) {
+    if (error.response && error.response.status === 401 && !originalRequest._retry) {
       originalRequest._retry = true;
 
       try {
         // Try to refresh the token
         const refreshToken = await AsyncStorage.getItem('refreshToken');
-        const response = await axios.post('https://api.ustatai.com/auth/refresh', {
+        const response = await axios.post(`${api.defaults.baseURL}/auth/refresh`, {
           refreshToken,
         });
 
-        const { token } = response.data;
+        const { accessToken } = response.data;
         
         // Save the new token
-        await AsyncStorage.setItem('token', token);
+        await AsyncStorage.setItem('accessToken', accessToken);
         
         // Update the authorization header
-        api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-        originalRequest.headers['Authorization'] = `Bearer ${token}`;
+        api.defaults.headers.common['Authorization'] = `Bearer ${accessToken}`;
+        originalRequest.headers['Authorization'] = `Bearer ${accessToken}`;
         
         // Retry the original request
         return api(originalRequest);
       } catch (refreshError) {
         // If refreshing fails, redirect to login
-        await AsyncStorage.removeItem('token');
+        await AsyncStorage.removeItem('accessToken');
         await AsyncStorage.removeItem('refreshToken');
         // You would typically trigger a logout action here through Redux
         return Promise.reject(refreshError);

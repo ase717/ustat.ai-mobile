@@ -32,9 +32,9 @@ const DashboardScreen = ({ navigation }) => {
       title: 'Hukuk',
       icon: 'hammer-outline',
       items: [
-        { id: 'calc1', name: 'İnfaz' },
-        { id: 'calc2', name: 'Vekalet Ücreti' },
-        { id: 'calc3', name: 'Harç ve Gider' },
+        { id: 'calc1', name: 'İnfaz', screen: 'InfazScreen' },
+        { id: 'calc2', name: 'Vekalet Ücreti', screen: 'VekaletUcretiScreen' },
+        { id: 'calc3', name: 'Harç ve Gider', screen: 'HarcGiderScreen' },
       ]
     },
     {
@@ -42,9 +42,9 @@ const DashboardScreen = ({ navigation }) => {
       title: 'İş',
       icon: 'briefcase-outline',
       items: [
-        { id: 'calc4', name: 'Maaş' },
-        { id: 'calc5', name: 'İşçilik Alacağı' },
-        { id: 'calc6', name: 'İş Kazası' },
+        { id: 'calc4', name: 'Maaş', screen: 'MaasScreen' },
+        { id: 'calc5', name: 'İşçilik Alacağı', screen: 'IscilikAlacaklariScreen' },
+        { id: 'calc6', name: 'İş Kazası', screen: 'IsKazasiScreen' },
       ]
     },
     {
@@ -52,7 +52,7 @@ const DashboardScreen = ({ navigation }) => {
       title: 'Kaza',
       icon: 'car-outline',
       items: [
-        { id: 'calc8', name: 'Trafik Kazası' },
+        { id: 'calc8', name: 'Trafik Kazası', screen: 'TrafikKazasiScreen' },
       ]
     },
   ];
@@ -75,16 +75,16 @@ const DashboardScreen = ({ navigation }) => {
 
   const navigateToProfileSettings = () => {
     setMenuVisible(false);
-    if (navigation && navigation.navigate) {
-      navigation.navigate('ProfileSettings');
-    }
+    navigation.navigate('ProfileSettings');
   };
 
   const navigateToAccountSubscription = () => {
     setMenuVisible(false);
-    if (navigation && navigation.navigate) {
-      navigation.navigate('AccountSubscription');
-    }
+    navigation.navigate('AccountSubscription');
+  };
+
+  const navigateToCalculation = (screenName) => {
+    navigation.navigate(screenName);
   };
 
   return (
@@ -130,10 +130,7 @@ const DashboardScreen = ({ navigation }) => {
                 <TouchableOpacity 
                   key={item.id} 
                   style={styles.calculationItem}
-                  onPress={() => {
-                    // Navigation will be implemented later
-                    console.log(`Selected calculation: ${item.name}`);
-                  }}
+                  onPress={() => navigateToCalculation(item.screen)}
                 >
                   <Text style={styles.calculationItemText}>{item.name}</Text>
                   <Ionicons name="chevron-forward" size={20} color={colors.grey[500]} />

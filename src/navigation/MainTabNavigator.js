@@ -8,6 +8,15 @@ import ProfileSettingsScreen from '../screens/ProfileSettingsScreen';
 import AccountSubscriptionScreen from '../screens/AccountSubscriptionScreen';
 import colors from '../theme/colors';
 
+// Import calculation screens
+import InfazScreen from '../screens/calculations/InfazScreen';
+import VekaletUcretiScreen from '../screens/calculations/VekaletUcretiScreen';
+import HarcGiderScreen from '../screens/calculations/HarcGiderScreen';
+import MaasScreen from '../screens/calculations/MaasScreen';
+import IscilikAlacaklariScreen from '../screens/calculations/IscilikAlacaklariScreen';
+import IsKazasiScreen from '../screens/calculations/IsKazasiScreen';
+import TrafikKazasiScreen from '../screens/calculations/TrafikKazasiScreen';
+
 // Placeholder components for the new screens
 const SearchScreen = (props) => <DashboardScreen {...props} />; // Pass navigation props
 const ProjectsScreen = (props) => <DashboardScreen {...props} />; // Pass navigation props
@@ -18,10 +27,51 @@ const ContractsScreen = (props) => <DashboardScreen {...props} />; // Pass navig
 const Tab = createBottomTabNavigator();
 const Stack = createStackNavigator();
 
-// Stack navigator for the Dashboard tab to handle ProfileSettings navigation
+// Create separate stack navigators for each tab
+const SearchStack = () => (
+  <Stack.Navigator screenOptions={{ headerShown: false }}>
+    <Stack.Screen name="SearchMain" component={DashboardScreen} />
+    <Stack.Screen name="ProfileSettings" component={ProfileSettingsScreen} />
+    <Stack.Screen name="AccountSubscription" component={AccountSubscriptionScreen} />
+  </Stack.Navigator>
+);
+
+const ProjectsStack = () => (
+  <Stack.Navigator screenOptions={{ headerShown: false }}>
+    <Stack.Screen name="ProjectsMain" component={DashboardScreen} />
+    <Stack.Screen name="ProfileSettings" component={ProfileSettingsScreen} />
+    <Stack.Screen name="AccountSubscription" component={AccountSubscriptionScreen} />
+  </Stack.Navigator>
+);
+
 const DashboardStack = () => (
   <Stack.Navigator screenOptions={{ headerShown: false }}>
     <Stack.Screen name="DashboardMain" component={DashboardScreen} />
+    <Stack.Screen name="ProfileSettings" component={ProfileSettingsScreen} />
+    <Stack.Screen name="AccountSubscription" component={AccountSubscriptionScreen} />
+    
+    {/* Calculation Screens */}
+    <Stack.Screen name="InfazScreen" component={InfazScreen} />
+    <Stack.Screen name="VekaletUcretiScreen" component={VekaletUcretiScreen} />
+    <Stack.Screen name="HarcGiderScreen" component={HarcGiderScreen} />
+    <Stack.Screen name="MaasScreen" component={MaasScreen} />
+    <Stack.Screen name="IscilikAlacaklariScreen" component={IscilikAlacaklariScreen} />
+    <Stack.Screen name="IsKazasiScreen" component={IsKazasiScreen} />
+    <Stack.Screen name="TrafikKazasiScreen" component={TrafikKazasiScreen} />
+  </Stack.Navigator>
+);
+
+const PetitionsStack = () => (
+  <Stack.Navigator screenOptions={{ headerShown: false }}>
+    <Stack.Screen name="PetitionsMain" component={DashboardScreen} />
+    <Stack.Screen name="ProfileSettings" component={ProfileSettingsScreen} />
+    <Stack.Screen name="AccountSubscription" component={AccountSubscriptionScreen} />
+  </Stack.Navigator>
+);
+
+const ContractsStack = () => (
+  <Stack.Navigator screenOptions={{ headerShown: false }}>
+    <Stack.Screen name="ContractsMain" component={DashboardScreen} />
     <Stack.Screen name="ProfileSettings" component={ProfileSettingsScreen} />
     <Stack.Screen name="AccountSubscription" component={AccountSubscriptionScreen} />
   </Stack.Navigator>

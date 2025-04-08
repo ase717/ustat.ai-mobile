@@ -17,7 +17,7 @@ const AppNavigator = () => {
       }}
     >
       {isAuthenticated ? (
-        <Stack.Screen name="Main" component={MainTabNavigator} />
+        <Stack.Screen name="MainTabs" component={MainTabNavigator} />
       ) : (
         <Stack.Screen name="Auth" component={AuthNavigator} />
       )}

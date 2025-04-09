@@ -1,0 +1,7 @@
+keyboardavoidingview yaptık ama bu sefer bir bölüm oluşturdu klavyenin üstünde onu düzeltelim
+login register'da üstat ve logo yan yana olacak
+daha önce giriş yapmış kullanıcıya email önerisi sunulması belki de beni hatırla eklenebilir
+Profil ayarlarında değiştirilebilen infolar belirlenmeli
+Abonelikte backend'ten veriyi doğru almamış
+login ve register'da geç'e basınca bir sonraki kutuya geçmeli
+giriş başarılı! uyarısı hoşuma gitmiyor

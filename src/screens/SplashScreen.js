@@ -53,7 +53,7 @@ const SplashScreen = ({ onFinish }) => {
   // Animated styles
   const logoAnimatedStyle = useAnimatedStyle(() => ({
     opacity: logoOpacity.value,
-    transform: [{ scale: logoScale.value }]
+    transform: [{ scale: logoScale.value }],
   }));
   
   const textAnimatedStyle = useAnimatedStyle(() => ({
@@ -83,13 +83,11 @@ const SplashScreen = ({ onFinish }) => {
       />
       
       <View style={styles.contentContainer}>
-        <Animated.View style={[styles.logoContainer, logoAnimatedStyle]}>
-          <Image 
-            source={require('../../assets/images/logo.png')} 
-            style={styles.logo} 
-            resizeMode="contain"
-          />
-        </Animated.View>
+        <Animated.Image 
+          source={require('../../assets/images/logo.png')} 
+          style={[styles.logo, logoAnimatedStyle]} 
+          resizeMode="contain"
+        />
         
         <Animated.Text style={[styles.logoText, textAnimatedStyle]}>
           Üstat AI
@@ -114,21 +112,22 @@ const styles = StyleSheet.create({
   },
   contentContainer: {
     alignItems: 'center',
+    justifyContent: 'center',
     flexDirection: 'row',
   },
   logoContainer: {
-    marginBottom: 20,
+    marginRight: 6,
   },
   logo: {
     width: 110,
     height: 110,
-    marginRight: 2,
+    marginRight: -10,
   },
   logoText: {
     fontSize: 35,
     fontWeight: '700',
     color: 'white',
-    marginLeft: 2,
+    marginLeft: -6,
   }
 });
 

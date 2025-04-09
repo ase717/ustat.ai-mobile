@@ -307,13 +307,21 @@ export default function InfazScreen({ navigation }) {
                   <Picker
                     selectedValue={crimeType}
                     onValueChange={(itemValue) => setCrimeType(itemValue)}
-                    style={styles.picker}
+                    style={{
+                      width: '100%',
+                      color: '#fff',
+                      backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                    }}
                     dropdownIconColor="#fff"
-                    mode="dropdown"
                   >
                     <Picker.Item label="Suç Tipi Seç" value="" color="#888" />
                     {CrimeTypes.map((type) => (
-                      <Picker.Item key={type.value} label={type.label} value={type.value} color="#fff" />
+                      <Picker.Item
+                        key={type.value}
+                        label={type.label}
+                        value={type.value}
+                        color="#fff"
+                      />
                     ))}
                   </Picker>
                 </View>
